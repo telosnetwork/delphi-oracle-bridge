@@ -148,12 +148,12 @@ describe("DelphiOracleBridge", function () {
         });
         it("Should emit a Replied event on valid reply", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
-            const cost = await bridge.getCost(100000);
+            const cost = await bridge.getCost(150000);
             const datapoints = [
                 {'pair': 'TLOSUSD', 'owner' : 'telosunlimited', 'value': ethers.utils.parseEther('1.0'), 'median': ethers.utils.parseEther('1.0'), 'timestamp': '1234567181' },
                 {'pair': 'TLOSEOS', 'owner' : 'telosunlimited', 'value': ethers.utils.parseEther('2.0'), 'median': ethers.utils.parseEther('2.0'), 'timestamp': '1234567181' }
             ];
-            await expect(consumer.connect(otherAccount).makeRequest(PAIR, 1, 100000, {value: cost })).to.not.be.reverted;
+            await expect(consumer.connect(otherAccount).makeRequest(PAIR, 1, 150000, {value: cost })).to.not.be.reverted;
             await expect(bridge.reply(0, datapoints)).to.emit(bridge, "Replied").withArgs(consumer.address, 0, PAIR);
         });
     });
