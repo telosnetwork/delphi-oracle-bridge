@@ -125,6 +125,12 @@ describe("DelphiOracleBridge", function () {
             await expect(consumer.makeRequest(PAIR, 1, 100000, {value: cost})).to.not.be.reverted;
             await expect(bridge.connect(otherAccount).reply(0, [{'pair': 'TLOSUSD', 'owner' : 'telosunlimited', 'value': ethers.utils.parseEther('1.0'), 'median': ethers.utils.parseEther('1.0'), 'timestamp': '1234567181' }])).to.be.reverted;
         });
+        it("Should not be able to reply to a Request without enough gas" , async function () {
+            const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
+            let cost = await bridge.getCost(1000);
+            await expect(consumer.makeRequest("120000", 10, 120, 1000, {"value": cost })).to.not.be.reverted;
+            await expect(bridge.reply(0, 116)).to.be.reverted;
+        });
         it("Should not accept response that does not have a request", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
             await expect(bridge.connect(otherAccount).reply(0, [{'pair': 'TLOSUSD', 'owner' : 'telosunlimited', 'value': ethers.utils.parseEther('1.0'), 'median': ethers.utils.parseEther('1.0'), 'timestamp': '1234567181' }])).to.be.reverted;
