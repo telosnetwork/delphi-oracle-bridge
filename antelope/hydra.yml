@@ -1,0 +1,10 @@
+contracts:
+  rngorc.brdg:
+    abi: build/rngorc.brdg.abi
+    name: rngorc.brdg
+    wasm:  build/rngorc.brdg.wasm
+  rng.oracle:
+    name: rng.oracle
+    abi:  tests/libs/rng.oracle.abi
+    wasm: tests/libs/rng.oracle.wasm
+options: null
