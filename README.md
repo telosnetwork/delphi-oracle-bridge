@@ -26,9 +26,3 @@ For more, refer to the documentation inside the `antelope` folder
 ### RequestListener
 
 Listens to new requests and calls the `reqnotify()` action of `delphi.bridge.cpp`
-
-### GasListener
-
-Periodically calls the `gasverify()` action of `delphi.bridge.cpp`
-
-For more, refer to the documentation inside the `listeners` folder
