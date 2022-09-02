@@ -20,10 +20,12 @@ describe("DelphiOracleBridge", function () {
 
         const OracleBridge = await ethers.getContractFactory("DelphiOracleBridge");
         const OracleConsumer = await ethers.getContractFactory("DelphiOracleConsumer");
-        const bridge = await OracleBridge.deploy(FEE, MAX_REQUESTS, owner.address, GAS_PRICE, "0x648ac5a8c4E1ae5A93cd5BeDF143B095B8c49a2a");
+        let GasOracle = await ethers.getContractFactory("GasOracleBridge");
+        gasOracle = GasOracle.deploy(owner.address, GAS_PRICE)
+        const bridge = await OracleBridge.deploy(FEE, MAX_REQUESTS, owner.address, gasOracle.address);
         const consumer = await OracleConsumer.deploy(bridge.address);
 
-        return { bridge, consumer, owner, otherAccount};
+        return { bridge, consumer, owner, otherAccount, gasOracle};
     }
 
     describe("Deployment", function () {

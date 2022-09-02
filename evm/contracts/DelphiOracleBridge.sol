@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 interface IGasOracleBridge {
-    getPrice() external view returns(uint);
+    function getPrice() external view returns(uint);
 }
 
 interface IDelphiOracleConsumer {
@@ -34,18 +34,18 @@ contract DelphiOracleBridge is Ownable {
      mapping (address => uint) public request_count;
      Request[] public requests; // Not using a mapping to be able to read from accountstate in native (else we need to know the mapping key we want to lookup)
 
-     IGasOracle public gasOracle;
+     IGasOracleBridge public gasOracle;
 
      uint public fee;
      uint public maxRequests;
 
      address public oracleEvmContract;
 
-      constructor(uint _fee, uint _maxRequests, address _oracleEvmContract, address _gasOracle) {
+      constructor(uint _fee, uint _maxRequests, address _oracleEvmContract, IGasOracleBridge _gasOracle) {
         fee = _fee;
         maxRequests = _maxRequests;
         oracleEvmContract = _oracleEvmContract;
-        gasOracle = IGasOracleBridge(_gasOracle)
+        gasOracle = _gasOracle
       }
 
      // SETTERS  ================================================================ >
@@ -64,16 +64,19 @@ contract DelphiOracleBridge is Ownable {
         return true;
      }
 
-     function getCost(uint callback_gas) external view returns(uint) {
-        (bool success, bytes memory data) = gasOracle.getPrice();
-        require(success, "Could not get gas price from gas oracle");
-        uint gasPrice = abi.decode(data, (uint));
+
+     function _getCost(uint callback_gas) internal returns(uint) {
+        uint gasPrice =  gasOracle.getPrice();
         return (fee + ((callback_gas * gasPrice  / 10**9)));
+     }
+
+     function getCost(uint callback_gas) external view returns(uint) {
+        return _getCost(callback_gas);
      }
 
      // REQUEST HANDLING ================================================================ >
      function request(uint callId, string memory pair, uint limit, uint callback_gas) external payable returns (bool) {
-        require(msg.value == getCost(callback_gas), "Send enough TLOS to cover the callback_gas and fee");
+        require(msg.value == _getCost(callback_gas), "Send enough TLOS to cover the callback_gas and fee");
         require(request_count[msg.sender] < maxRequests, "Maximum requests reached, wait for replies or delete one");
         require(bytes(pair).length > 0, "No pair was passed");
         require(bytes(pair).length < 33, "Pair string must be 32b or less");
