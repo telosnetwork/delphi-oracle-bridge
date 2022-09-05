@@ -45,7 +45,7 @@ contract DelphiOracleBridge is Ownable {
         fee = _fee;
         maxRequests = _maxRequests;
         oracleEvmContract = _oracleEvmContract;
-        gasOracle = _gasOracle
+        gasOracle = _gasOracle;
       }
 
      // SETTERS  ================================================================ >
@@ -65,9 +65,9 @@ contract DelphiOracleBridge is Ownable {
      }
 
 
-     function _getCost(uint callback_gas) internal returns(uint) {
+     function _getCost(uint callback_gas) internal view returns(uint) {
         uint gasPrice =  gasOracle.getPrice();
-        return (fee + ((callback_gas * gasPrice  / 10**9)));
+        return (fee + (callback_gas * gasPrice));
      }
 
      function getCost(uint callback_gas) external view returns(uint) {
@@ -80,7 +80,7 @@ contract DelphiOracleBridge is Ownable {
         require(request_count[msg.sender] < maxRequests, "Maximum requests reached, wait for replies or delete one");
         require(bytes(pair).length > 0, "No pair was passed");
         require(bytes(pair).length < 33, "Pair string must be 32b or less");
-        require(limit < 10, "Maximum limit is 10");
+        require(limit < 11, "Maximum limit is 10");
 
         // CHECK EXISTS
         require(!this.requestExists(msg.sender, callId), "Call ID already exists");

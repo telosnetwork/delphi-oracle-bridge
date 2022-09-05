@@ -5,7 +5,7 @@ const {
 const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
 const { expect } = require("chai");
 
-const FEE = ethers.utils.parseEther('1.0');
+const FEE = ethers.utils.parseEther('0.2');
 const MAX_REQUESTS = 10;
 const GAS_PRICE = 23610503242;
 const PAIR = "tlosusd";
@@ -21,11 +21,15 @@ describe("DelphiOracleBridge", function () {
         const OracleBridge = await ethers.getContractFactory("DelphiOracleBridge");
         const OracleConsumer = await ethers.getContractFactory("DelphiOracleConsumer");
         let GasOracle = await ethers.getContractFactory("GasOracleBridge");
-        gasOracle = GasOracle.deploy(owner.address, GAS_PRICE)
+        gasOracle = await GasOracle.deploy(owner.address, GAS_PRICE)
         const bridge = await OracleBridge.deploy(FEE, MAX_REQUESTS, owner.address, gasOracle.address);
         const consumer = await OracleConsumer.deploy(bridge.address);
 
-        return { bridge, consumer, owner, otherAccount, gasOracle};
+        const datapoints = [
+            {'pair': 'TLOSUSD', 'owner' : 'telosunlimited', 'value': ethers.utils.parseEther('1.0'), 'median': ethers.utils.parseEther('1.0'), 'timestamp': '1234567181' },
+            {'pair': 'TLOSEOS', 'owner' : 'telosunlimited', 'value': ethers.utils.parseEther('2.0'), 'median': ethers.utils.parseEther('2.0'), 'timestamp': '1234567181' }
+        ];
+        return { bridge, consumer, owner, otherAccount, gasOracle, datapoints};
     }
 
     describe("Deployment", function () {
@@ -126,10 +130,10 @@ describe("DelphiOracleBridge", function () {
             await expect(bridge.connect(otherAccount).reply(0, [{'pair': 'TLOSUSD', 'owner' : 'telosunlimited', 'value': ethers.utils.parseEther('1.0'), 'median': ethers.utils.parseEther('1.0'), 'timestamp': '1234567181' }])).to.be.reverted;
         });
         it("Should not be able to reply to a Request without enough gas" , async function () {
-            const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
+            const { bridge, consumer, owner, otherAccount, datapoints } = await loadFixture(deployFixture);
             let cost = await bridge.getCost(1000);
-            await expect(consumer.makeRequest("120000", 10, 120, 1000, {"value": cost })).to.not.be.reverted;
-            await expect(bridge.reply(0, 116)).to.be.reverted;
+            await expect(consumer.makeRequest("120000", 10, 1000, {"value": cost })).to.not.be.reverted;
+            await expect(bridge.reply(0, datapoints)).to.be.reverted;
         });
         it("Should not accept response that does not have a request", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
@@ -142,23 +146,15 @@ describe("DelphiOracleBridge", function () {
             await expect(bridge.connect(otherAccount).reply(0, [])).to.be.reverted;
         });
         it("Should accept valid response and delete request", async function () {
-            const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
+            const { bridge, consumer, owner, otherAccount, datapoints } = await loadFixture(deployFixture);
             const cost = await bridge.getCost(100000);
-            const datapoints = [
-                {'pair': 'TLOSUSD', 'owner' : 'telosunlimited', 'value': ethers.utils.parseEther('1.0'), 'median': ethers.utils.parseEther('1.0'), 'timestamp': '1234567181' },
-                {'pair': 'TLOSEOS', 'owner' : 'telosunlimited', 'value': ethers.utils.parseEther('2.0'), 'median': ethers.utils.parseEther('2.0'), 'timestamp': '1234567181' }
-            ];
             await expect(consumer.connect(otherAccount).makeRequest(PAIR, 1, 100000, {value: cost })).to.not.be.reverted;
             await expect(bridge.reply(0, datapoints)).to.not.be.reverted;
             await expect(await bridge.requestExists(otherAccount.address, 0)).to.equal(false);
         });
         it("Should emit a Replied event on valid reply", async function () {
-            const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
+            const { bridge, consumer, owner, otherAccount, datapoints } = await loadFixture(deployFixture);
             const cost = await bridge.getCost(150000);
-            const datapoints = [
-                {'pair': 'TLOSUSD', 'owner' : 'telosunlimited', 'value': ethers.utils.parseEther('1.0'), 'median': ethers.utils.parseEther('1.0'), 'timestamp': '1234567181' },
-                {'pair': 'TLOSEOS', 'owner' : 'telosunlimited', 'value': ethers.utils.parseEther('2.0'), 'median': ethers.utils.parseEther('2.0'), 'timestamp': '1234567181' }
-            ];
             await expect(consumer.connect(otherAccount).makeRequest(PAIR, 1, 150000, {value: cost })).to.not.be.reverted;
             await expect(bridge.reply(0, datapoints)).to.emit(bridge, "Replied").withArgs(consumer.address, 0, PAIR);
         });

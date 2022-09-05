@@ -76,7 +76,7 @@ namespace orc_bridge
 
     //======================== RNG Oracle actions ========================
 
-    // request notification, checks for values in eosio.evm accountstate and adds a request
+    // Request notification, checks for values in eosio.evm accountstate, queries the relevant scope on the datapoints delphioracle table and sends back the response to EVM
     ACTION delphibridge::reqnotify()
     {
         // open config singletons
@@ -113,11 +113,7 @@ namespace orc_bridge
             const uint256_t call_id = (call_id_checksum == account_states_bykey.end()) ? uint256_t(0) : call_id_checksum->value;
             const std::vector<uint8_t> call_id_bs = pad(intx::to_byte_string(call_id), 16, true);
 
-            // Get callback gas from EVM storage
-            const auto gas_checksum = account_states_bykey.find(getArrayMemberSlot(array_slot, 7, 7, array_length));
-            uint256_t gas = (gas_checksum == account_states_bykey.end()) ? uint256_t(0) : gas_checksum->value;
-
-            // Get pair from EVM storage (strings < 32b, as will be our case here for pairs, are stored as data + length)
+            // Get pair from EVM storage (strings < 32b, as will be our case here for pairs (enforced by EVM contract with require(bytes(pair) < 33)), are stored as data + length)
             // To get string, we need to remove trailing 0 from the data part (using length)
             const auto pair_checksum = account_states_bykey.require_find(getArrayMemberSlot(array_slot, 5, 7, array_length), "Pair not found");
             const size_t pair_length = shrink<size_t>(pair_checksum->value.lo) / 2; // get length as size_t
@@ -140,35 +136,40 @@ namespace orc_bridge
 
             pair = pad(pair, 32, false);
 
+            // get total datapoints (probably a 1 liner for this)
             uint64_t total = 0;
             for ( auto itr = _datapoints.begin(); itr != _datapoints.end() && total < limit; itr++ ) {
                total++;
             }
-            // tuple[] prefixes & delimiters
+
+            // write the tuple[] prefixes & delimiters
             std::vector<uint8_t> array_delimiter = pad(intx::to_byte_string(uint256_t(64)), 32, true); // delimiter
             data.insert(data.end(), array_delimiter.begin(), array_delimiter.end());
             array_delimiter = pad(intx::to_byte_string(uint256_t(total)), 32, true); // total array length
             data.insert(data.end(), array_delimiter.begin(), array_delimiter.end());
+
+            // Iterate to write each member byte position
             uint64_t count = 0;
-            // Iterate for member position
             for ( auto itr = _datapoints.begin(); itr != _datapoints.end() && count < limit; itr++ ) {
-               array_delimiter = pad(intx::to_byte_string(uint256_t(32 * total + (32 * 9 * count))), 32, true);  // position of each member
+               array_delimiter = pad(intx::to_byte_string(uint256_t(32 * total + (32 * 9 * count))), 32, true);  // byte position of each member
                data.insert(data.end(), array_delimiter.begin(), array_delimiter.end());
                count++;
             }
 
-            // tuple[] data
+            // Iterate to write tuple[] member data
             count = 0;
             for ( auto itr = _datapoints.begin(); itr != _datapoints.end() && count < limit; itr++ ) {
                std::vector<uint8_t> datapoint;
 
-                array_delimiter = pad(intx::to_byte_string(uint256_t(160)), 32, true);  // delimiter
-                data.insert(data.end(), array_delimiter.begin(), array_delimiter.end());
-                array_delimiter = pad(intx::to_byte_string(uint256_t(224)), 32, true);  // delimiter
-                data.insert(data.end(), array_delimiter.begin(), array_delimiter.end());
+               // Start with delimiters
+               array_delimiter = pad(intx::to_byte_string(uint256_t(160)), 32, true);  // delimiter
+               data.insert(data.end(), array_delimiter.begin(), array_delimiter.end());
+               array_delimiter = pad(intx::to_byte_string(uint256_t(224)), 32, true);  // delimiter
+               data.insert(data.end(), array_delimiter.begin(), array_delimiter.end());
 
+               // Add the data
                auto owner = pad(intx::to_byte_string(itr->owner.value), 32, false);
-               auto owner_string_length = pad(intx::to_byte_string(uint256_t(itr->owner.to_string().length())), 32, true); // owner string length
+               auto owner_string_length = pad(intx::to_byte_string(uint256_t(itr->owner.to_string().length())), 32, true);
                std::vector<uint8_t> timestamp = pad(intx::to_byte_string(itr->timestamp.sec_since_epoch()), 32, true);
                std::vector<uint8_t> value = pad(intx::to_byte_string(itr->value), 32, true);
                std::vector<uint8_t> median = pad(intx::to_byte_string(itr->median), 32, true);
@@ -183,20 +184,13 @@ namespace orc_bridge
                count++;
             }
 
-            // Print it
-            //auto rlp_encoded = rlp::encode(account->nonce, evm_conf.gas_price, GAS_LIMIT, to, uint256_t(0), data, CURRENT_CHAIN_ID, 0, 0);
-            //std::vector<uint8_t> raw;
-            //raw.insert(raw.end(), std::begin(rlp_encoded), std::end(rlp_encoded));
-            //print(bin2hex(raw));
-
-            // send back to EVM using eosio.evm
+            // send the response back to EVM using eosio.evm
             action(
                 permission_level {get_self(), "active"_n},
                 EVM_SYSTEM_CONTRACT,
                 "raw"_n,
                 std::make_tuple(get_self(), rlp::encode(account->nonce, evm_conf.gas_price, GAS_LIMIT, to, uint256_t(0), data, CURRENT_CHAIN_ID, 0, 0),  false, std::optional<eosio::checksum160>(account->address))
             ).send();
-
 
             return;
         }
