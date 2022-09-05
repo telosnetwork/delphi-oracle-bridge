@@ -8,10 +8,6 @@ This part of the repository requires the [`cleos`](https://developers.eos.io/man
 
 `npm install`
 
-### CONFIGURE
-
-Edit the following values in the `env` file:
-
 ### BUILD
 
 Run the following command:
