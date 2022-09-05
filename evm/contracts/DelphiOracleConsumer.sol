@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 interface IDelphiOracleBridge {
-    function request(uint callId, string calldata pair, uint limit, uint callback_gas) external payable;
+    function request(uint callId, string calldata pair, uint limit, uint callback_gas, address callback_address) external payable;
 }
 
 contract DelphiOracleConsumer {
@@ -37,7 +37,7 @@ contract DelphiOracleConsumer {
             callId = requests[requests.length - 1].id + 1;
         }
         requests.push(Request(callId, pair));
-        bridge.request{value: msg.value }(callId, pair, limit, callback_gas);
+        bridge.request{value: msg.value }(callId, pair, limit, callback_gas, address(this));
     }
 
     function receiveDatapoints(uint callId, Datapoint[] calldata datapoints) external {

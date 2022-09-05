@@ -29,6 +29,7 @@ contract DelphiOracleBridge is Ownable {
         uint limit;
         string pair;
         uint callback_gas;
+        address callback_address;
      }
 
      mapping (address => uint) public request_count;
@@ -124,6 +125,7 @@ contract DelphiOracleBridge is Ownable {
             if(requests[i].id == callId){
                 uint caller_id = requests[i].caller_id;
                 address caller = requests[i].caller_address;
+                address callback_address = requests[i].callback_address;
                 // Delete no matter what what happens to callback
                 string memory pair = requests[i].pair;
                 uint gas = requests[i].callback_gas;
@@ -131,7 +133,7 @@ contract DelphiOracleBridge is Ownable {
                 requests.pop();
                 request_count[caller]--;
                 if(gas > 0){
-                    IDelphiOracleConsumer(caller).receiveDatapoints{gas: gas}(callId, datapoints);
+                    IDelphiOracleConsumer(callback_address).receiveDatapoints{gas: gas}(callId, datapoints);
                 }
                 emit Replied(caller, caller_id, pair);
                 return;
