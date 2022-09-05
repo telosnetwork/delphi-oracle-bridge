@@ -154,8 +154,8 @@ describe("DelphiOracleBridge", function () {
         });
         it("Should emit a Replied event on valid reply", async function () {
             const { bridge, consumer, owner, otherAccount, datapoints } = await loadFixture(deployFixture);
-            const cost = await bridge.getCost(150000);
-            await expect(consumer.connect(otherAccount).makeRequest(PAIR, 1, 150000, {value: cost })).to.not.be.reverted;
+            const cost = await bridge.getCost(75000);
+            await expect(consumer.connect(otherAccount).makeRequest(PAIR, 1, 75000, {value: cost })).to.not.be.reverted;
             await expect(bridge.reply(0, datapoints)).to.emit(bridge, "Replied").withArgs(consumer.address, 0, PAIR);
         });
     });
