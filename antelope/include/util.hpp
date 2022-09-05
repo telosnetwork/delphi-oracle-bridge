@@ -133,14 +133,15 @@ namespace orc_bridge
      vector.insert(prepend ? vector.begin() : vector.end(),(padding - vector.size()), 0);
     return vector;
   }
+
   static inline void delimitTupleArrayElement(std::vector<uint8_t> *data){
         std::vector<uint8_t> array_delimiter = pad(intx::to_byte_string(uint256_t(160)), 32, true);  // delimiter
         data->insert(data->end(), array_delimiter.begin(), array_delimiter.end());
         array_delimiter = pad(intx::to_byte_string(uint256_t(224)), 32, true);  // delimiter
         data->insert(data->end(), array_delimiter.begin(), array_delimiter.end());
   }
-  template <typename table>
 
+  template <typename table>
   static inline void delimitTupleArray(table& iterator, const uint256_t limit, std::vector<uint8_t> *data){
     uint64_t total = 0;
     for ( auto itr = iterator.begin(); itr != iterator.end() && total < limit; itr++ ) {

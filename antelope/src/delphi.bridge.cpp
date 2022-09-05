@@ -96,6 +96,7 @@ namespace orc_bridge
         const auto account_states_bykey = account_states.get_index<"bykey"_n>();
         const auto storage_key = toChecksum256(uint256_t(STORAGE_INDEX));
         const auto array_length_checksum = account_states_bykey.require_find(storage_key, "No requests");
+        check(array_length_checksum->value > 0, "No requests found");
         const auto array_slot = checksum256ToValue(keccak_256(storage_key.extract_as_byte_array()));
 
         // Get "to" address from config singleton
@@ -107,12 +108,12 @@ namespace orc_bridge
         // Loop to make sure we do not miss requests
         for(uint256_t i = 0; i < array_length_checksum->value;i=i+1){
             const uint256_t array_length = array_length_checksum->value - i;
-            // get call ID from EVM storage
+            // get call ID (uint) from EVM storage
             const auto call_id_checksum = account_states_bykey.find(getArrayMemberSlot(array_slot, 0, 8, array_length));
             const uint256_t call_id = (call_id_checksum == account_states_bykey.end()) ? uint256_t(0) : call_id_checksum->value;
             const std::vector<uint8_t> call_id_bs = pad(intx::to_byte_string(call_id), 32, true);
 
-            // Get pair from EVM storage (strings < 32b, as will be our case here for pairs, are stored as data + length)
+            // Get pair (string) from EVM storage (strings < 32b, as will be our case here for pairs, are stored as data + length)
             // To get string, we need to remove trailing 0 from the data part (using length)
             const auto pair_checksum = account_states_bykey.require_find(getArrayMemberSlot(array_slot, 5, 8, array_length), "Pair not found");
             const size_t pair_length = shrink<size_t>(pair_checksum->value.lo) / 2; // get length as size_t
@@ -120,7 +121,7 @@ namespace orc_bridge
             std::vector<uint8_t> pair = intx::to_byte_string(pair_checksum->value.hi);
             pair.resize(pair_length); // remove trailing 0
 
-            // Get limit (uint)
+            // Get limit (uint) from EVM storage
             const auto limit_checksum = account_states_bykey.find(getArrayMemberSlot(array_slot, 4, 8, array_length));
             const auto limit = (limit_checksum == account_states_bykey.end()) ? 0 : limit_checksum->value;
 
@@ -141,31 +142,27 @@ namespace orc_bridge
             // tuple[] data
             uint64_t count = 0;
             for ( auto itr = _datapoints.begin(); itr != _datapoints.end() && count < limit; itr++ ) {
-               std::vector<uint8_t> datapoint;
 
                delimitTupleArrayElement(&data);
 
+               // Prepare remaining values
                auto owner = pad(intx::to_byte_string(itr->owner.value), 32, false);
                auto owner_string_length = pad(intx::to_byte_string(uint256_t(itr->owner.to_string().length())), 32, true); // owner string length
                std::vector<uint8_t> timestamp = pad(intx::to_byte_string(itr->timestamp.sec_since_epoch()), 32, true);
                std::vector<uint8_t> value = pad(intx::to_byte_string(itr->value), 32, true);
                std::vector<uint8_t> median = pad(intx::to_byte_string(itr->median), 32, true);
-               datapoint.insert(datapoint.end(), timestamp.begin(), timestamp.end());
-               datapoint.insert(datapoint.end(), value.begin(), value.end());
-               datapoint.insert(datapoint.end(), median.begin(), median.end());
-               datapoint.insert(datapoint.end(), pair_length_bs.begin(), pair_length_bs.end());
-               datapoint.insert(datapoint.end(), pair.begin(), pair.end());
-               datapoint.insert(datapoint.end(), owner_string_length.begin(), owner_string_length.end());
-               datapoint.insert(datapoint.end(), owner.begin(), owner.end());
-               data.insert(data.end(), datapoint.begin(), datapoint.end());
+
+               // Append values
+               data.insert(data.end(), timestamp.begin(), timestamp.end());
+               data.insert(data.end(), value.begin(), value.end());
+               data.insert(data.end(), median.begin(), median.end());
+               data.insert(data.end(), pair_length_bs.begin(), pair_length_bs.end());
+               data.insert(data.end(), pair.begin(), pair.end());
+               data.insert(data.end(), owner_string_length.begin(), owner_string_length.end());
+               data.insert(data.end(), owner.begin(), owner.end());
+
                count++;
             }
-
-            // Print it
-            //auto rlp_encoded = rlp::encode(account->nonce, evm_conf.gas_price, GAS_LIMIT, to, uint256_t(0), data, CURRENT_CHAIN_ID, 0, 0);
-            //std::vector<uint8_t> raw;
-            //raw.insert(raw.end(), std::begin(rlp_encoded), std::end(rlp_encoded));
-            //print(bin2hex(raw));
 
             // send back to EVM using eosio.evm
             action(
@@ -175,10 +172,6 @@ namespace orc_bridge
                 std::make_tuple(get_self(), rlp::encode(account->nonce, evm_conf.gas_price, GAS_LIMIT, to, uint256_t(0), data, CURRENT_CHAIN_ID, 0, 0),  false, std::optional<eosio::checksum160>(account->address))
             ).send();
 
-
-            return;
         }
-        check(false, "No requests found");
-
     };
 }
