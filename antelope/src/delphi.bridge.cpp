@@ -108,24 +108,20 @@ namespace orc_bridge
         for(uint256_t i = 0; i < array_length_checksum->value;i=i+1){
             const uint256_t array_length = array_length_checksum->value - i;
             // get call ID from EVM storage
-            const auto call_id_checksum = account_states_bykey.find(getArrayMemberSlot(array_slot, 0, 7, array_length));
+            const auto call_id_checksum = account_states_bykey.find(getArrayMemberSlot(array_slot, 0, 8, array_length));
             const uint256_t call_id = (call_id_checksum == account_states_bykey.end()) ? uint256_t(0) : call_id_checksum->value;
             const std::vector<uint8_t> call_id_bs = pad(intx::to_byte_string(call_id), 32, true);
 
-            // Get callback gas from EVM storage
-            const auto gas_checksum = account_states_bykey.find(getArrayMemberSlot(array_slot, 7, 7, array_length));
-            uint256_t gas = (gas_checksum == account_states_bykey.end()) ? uint256_t(0) : gas_checksum->value;
-
             // Get pair from EVM storage (strings < 32b, as will be our case here for pairs, are stored as data + length)
             // To get string, we need to remove trailing 0 from the data part (using length)
-            const auto pair_checksum = account_states_bykey.require_find(getArrayMemberSlot(array_slot, 5, 7, array_length), "Pair not found");
+            const auto pair_checksum = account_states_bykey.require_find(getArrayMemberSlot(array_slot, 5, 8, array_length), "Pair not found");
             const size_t pair_length = shrink<size_t>(pair_checksum->value.lo) / 2; // get length as size_t
             const std::vector<uint8_t> pair_length_bs = pad(intx::to_byte_string(uint256_t(pair_length)), 32, true);
             std::vector<uint8_t> pair = intx::to_byte_string(pair_checksum->value.hi);
             pair.resize(pair_length); // remove trailing 0
 
             // Get limit (uint)
-            const auto limit_checksum = account_states_bykey.find(getArrayMemberSlot(array_slot, 4, 7, array_length));
+            const auto limit_checksum = account_states_bykey.find(getArrayMemberSlot(array_slot, 4, 8, array_length));
             const auto limit = (limit_checksum == account_states_bykey.end()) ? 0 : limit_checksum->value;
 
             // Prepare solidity function data (function signature + arguments)
