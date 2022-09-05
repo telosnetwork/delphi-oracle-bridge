@@ -36,3 +36,5 @@ Use ethers to get an instance of the bridge and configure the EVM address of the
 
 `await bridge.setOracleEVMContract('0xf8Da1....')`
 
+_If your anteloppe contract doesn't have an EVM address yet use the `eosio.evm` contract `create(account, data)` action to create one._
+
