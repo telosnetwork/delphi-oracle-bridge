@@ -2,7 +2,7 @@
 
 ### REQUIREMENTS
 
-This part of the repository requires the [`cleos`](https://developers.eos.io/manuals/eos/v2.2/cleos/index) command line tool
+This part of the repository requires the [`cleos`](https://developers.eos.io/manuals/eos/v2.2/cleos/index) command line tool as well as NodeJS 14+ with NPM
 
 ### INSTALL
 
