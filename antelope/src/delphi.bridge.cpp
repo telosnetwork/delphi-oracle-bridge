@@ -134,34 +134,16 @@ namespace orc_bridge
             datapointstable _datapoints(ORACLE, name(decodeHex(bin2hex(pair))).value);
             check(_datapoints.begin() != _datapoints.end(), "No datapoints found for this pair");
 
+            delimitTupleArray<decltype(_datapoints)>(_datapoints, limit, &data);
+
             pair = pad(pair, 32, false);
 
-            uint64_t total = 0;
-            for ( auto itr = _datapoints.begin(); itr != _datapoints.end() && total < limit; itr++ ) {
-               total++;
-            }
-            // tuple[] prefixes & delimiters
-            std::vector<uint8_t> array_delimiter = pad(intx::to_byte_string(uint256_t(64)), 32, true); // delimiter
-            data.insert(data.end(), array_delimiter.begin(), array_delimiter.end());
-            array_delimiter = pad(intx::to_byte_string(uint256_t(total)), 32, true); // total array length
-            data.insert(data.end(), array_delimiter.begin(), array_delimiter.end());
-            uint64_t count = 0;
-            // Iterate for member position
-            for ( auto itr = _datapoints.begin(); itr != _datapoints.end() && count < limit; itr++ ) {
-               array_delimiter = pad(intx::to_byte_string(uint256_t(32 * total + (32 * 9 * count))), 32, true);  // position of each member
-               data.insert(data.end(), array_delimiter.begin(), array_delimiter.end());
-               count++;
-            }
-
             // tuple[] data
-            count = 0;
+            uint64_t count = 0;
             for ( auto itr = _datapoints.begin(); itr != _datapoints.end() && count < limit; itr++ ) {
                std::vector<uint8_t> datapoint;
 
-                array_delimiter = pad(intx::to_byte_string(uint256_t(160)), 32, true);  // delimiter
-                data.insert(data.end(), array_delimiter.begin(), array_delimiter.end());
-                array_delimiter = pad(intx::to_byte_string(uint256_t(224)), 32, true);  // delimiter
-                data.insert(data.end(), array_delimiter.begin(), array_delimiter.end());
+               delimitTupleArrayElement(&data);
 
                auto owner = pad(intx::to_byte_string(itr->owner.value), 32, false);
                auto owner_string_length = pad(intx::to_byte_string(uint256_t(itr->owner.to_string().length())), 32, true); // owner string length

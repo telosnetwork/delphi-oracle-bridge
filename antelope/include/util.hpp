@@ -128,16 +128,36 @@ namespace orc_bridge
     return intx::be::unsafe::load<uint256_t>(output.data());
   }
 
-  template <typename ... Args>
-  static inline std::vector<uint8_t> makeEVMTuple(Args&& ... args){
-    if (sizeof...(Args) > 1) {
-    }
-  }
-
   template<typename T>
   inline std::vector<T> pad(std::vector<T> vector, uint64_t padding, bool prepend){
      vector.insert(prepend ? vector.begin() : vector.end(),(padding - vector.size()), 0);
     return vector;
+  }
+  static inline void delimitTupleArrayElement(std::vector<uint8_t> *data){
+        std::vector<uint8_t> array_delimiter = pad(intx::to_byte_string(uint256_t(160)), 32, true);  // delimiter
+        data->insert(data->end(), array_delimiter.begin(), array_delimiter.end());
+        array_delimiter = pad(intx::to_byte_string(uint256_t(224)), 32, true);  // delimiter
+        data->insert(data->end(), array_delimiter.begin(), array_delimiter.end());
+  }
+  template <typename table>
+
+  static inline void delimitTupleArray(table& iterator, const uint256_t limit, std::vector<uint8_t> *data){
+    uint64_t total = 0;
+    for ( auto itr = iterator.begin(); itr != iterator.end() && total < limit; itr++ ) {
+       total++;
+    }
+    std::vector<uint8_t> array_delimiter = pad(intx::to_byte_string(uint256_t(64)), 32, true); // delimiter
+    data->insert(data->end(), array_delimiter.begin(), array_delimiter.end());
+    array_delimiter = pad(intx::to_byte_string(uint256_t(total)), 32, true); // total array length
+    data->insert(data->end(), array_delimiter.begin(), array_delimiter.end());
+
+    uint64_t count = 0;
+    // Iterate for member position
+    for ( auto itr = iterator.begin(); itr != iterator.end() && count < limit; itr++ ) {
+       array_delimiter = pad(intx::to_byte_string(uint256_t(32 * total + (32 * 9 * count))), 32, true);  // position of each member
+       data->insert(data->end(), array_delimiter.begin(), array_delimiter.end());
+       count++;
+    }
   }
 
   inline const eosio::checksum256 getArrayMemberSlot(uint256_t array_slot, uint256_t position, uint256_t property_count, uint256_t array_length){
