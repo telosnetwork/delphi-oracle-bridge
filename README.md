@@ -33,7 +33,7 @@ Listens to new requests and calls the `reqnotify()` action of `delphi.bridge.cpp
 
 ## Make a request !
 
-Deploy a contract that calls the newly deployed `DelphiOracleBridge` contract's `request(uint callId, string memory pair, uint limit, uint callback_gas) external payable` function, passing a value to cover fee and callback gas cost, and implements a `receiveDatapoints(uint, Datapoint[] calldata) external` callback function in order to receive the oracle's answer. Refer to the `DelphiOracleConsumer` EVM contract for an example.
+Deploy a contract that calls the `DelphiOracleBridge` contract's `request(uint callId, string memory pair, uint limit, uint callback_gas) external payable` function, passing a value to cover fee and callback gas cost, and implements a `receiveDatapoints(uint, Datapoint[] calldata) external` callback function in order to receive the oracle's answer. Refer to the `DelphiOracleConsumer` EVM contract for an example.
 
 ### What is callback gas ? How do I know what value to pass ?
 
