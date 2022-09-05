@@ -13,6 +13,10 @@ Receives requests and sends responses back to a callback function
 
 Example implementation of a consumer with a callback function
 
+### GasOracleBridge
+
+Query current gas price from a smart contract. This contract is only included for test purposes and will not be deployed.
+
 For more, refer to the documentation inside the `evm` folder
 
 ## Antelope
