@@ -1,5 +1,9 @@
 # Delphi Oracle Bridge :: Antelope
 
+### REQUIREMENTS
+
+This part of the repository requires the [`cleos`](https://developers.eos.io/manuals/eos/v2.2/cleos/index) command line tool
+
 ### INSTALL
 
 `npm install`
