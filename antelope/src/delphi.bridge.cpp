@@ -90,7 +90,7 @@ namespace orc_bridge
 
         // find EVM account for this contract (if does not exist, you can create it via eosio.evm create action)
         const auto accounts_byaccount = _accounts.get_index<"byaccount"_n>();
-        const auto account = accounts_byaccount.require_find(get_self().value, "Account not found");
+        const auto account = accounts_byaccount.require_find(get_self().value, "EVM account not found for this contract, create it via eosio.evm 'create()' action");
 
         // Get our Requests array slot & find its length
         const auto account_states_bykey = account_states.get_index<"bykey"_n>();
@@ -133,7 +133,9 @@ namespace orc_bridge
 
             // read table of delphi oracle to get datapoints
             datapointstable _datapoints(ORACLE, name(decodeHex(bin2hex(pair))).value);
-            check(_datapoints.begin() != _datapoints.end(), "No datapoints found for this pair");
+            if(_datapoints.begin() != _datapoints.end()){
+                continue; // No datapoints found for this pair
+            }
 
             delimitTupleArray<decltype(_datapoints)>(_datapoints, limit, &data);
 
