@@ -96,7 +96,6 @@ namespace orc_bridge
         const auto account_states_bykey = account_states.get_index<"bykey"_n>();
         const auto storage_key = toChecksum256(uint256_t(STORAGE_INDEX));
         const auto array_length_checksum = account_states_bykey.require_find(storage_key, "No requests");
-        check(array_length_checksum->value > 0, "No requests found");
         const auto array_slot = checksum256ToValue(keccak_256(storage_key.extract_as_byte_array()));
 
         // Get "to" address from config singleton
