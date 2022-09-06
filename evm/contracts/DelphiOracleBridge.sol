@@ -78,7 +78,7 @@ contract DelphiOracleBridge is Ownable {
 
      // REQUEST HANDLING ================================================================ >
      function request(uint callId, string memory pair, uint limit, uint callback_gas, address callback_address) external payable returns (bool) {
-        require(msg.value == _getCost(callback_gas), "Send enough TLOS to cover the callback_gas and fee");
+        require(msg.value == _getCost(callback_gas), "Send enough TLOS to cover the callback_gas and fee, use getCost(uint callback_gas) to get back the exact value to pass in this call.");
         require(request_count[msg.sender] < maxRequests, "Maximum requests reached, wait for replies or delete one");
         require(bytes(pair).length > 0, "No pair was passed");
         require(bytes(pair).length < 33, "Pair string must be 32b or less");
