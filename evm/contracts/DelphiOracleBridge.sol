@@ -120,7 +120,6 @@ contract DelphiOracleBridge is Ownable {
      // REPLY HANDLING ================================================================ >
      function reply(uint callId, IDelphiOracleConsumer.Datapoint[] calldata datapoints) external {
         require(msg.sender == oracleEvmContract, "Only the native oracle bridge EVM address can call this function");
-        require(datapoints.length > 0, "Response requires at least one datapoint");
         for(uint i = 0; i < requests.length; i++){
             if(requests[i].id == callId){
                 uint caller_id = requests[i].caller_id;

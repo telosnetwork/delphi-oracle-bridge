@@ -2,8 +2,6 @@ const ecc = require("eosjs-ecc");
 const HyperionStreamClient = require("@eosrio/hyperion-stream-client").default;
 const fetch = require("node-fetch");
 
-const REQUESTS_TABLE = "rngrequests";
-
 class RequestListener {
   constructor(
     oracleContract,
@@ -39,9 +37,9 @@ class RequestListener {
     let headBlock = getInfo.head_block_num;
     this.streamClient.onConnect = () => {
       this.streamClient.streamDeltas({
-        code: this.oracleContract,
-        table: REQUESTS_TABLE,
-        scope: this.oracleContract,
+        code: 'eosio.evm',
+        table: "accountstate",
+        scope: process.env.ACCOUNT_STATE_SCOPE,
         payer: "",
         start_from: headBlock,
         read_until: 0,
@@ -62,9 +60,9 @@ class RequestListener {
   async doTableCheck() {
     console.log(`Doing table check...`);
     const results = await this.rpc.get_table_rows({
-      code: this.oracleContract,
-      scope: this.oracleContract,
-      table: REQUESTS_TABLE,
+      code: 'eosio.evm',
+      scope: process.env.ACCOUNT_STATE_SCOPE,
+      table: "accountstate",
       limit: 1000,
     });
 

@@ -5,7 +5,9 @@
 
 #pragma once
 
-namespace orc_bridge
+using namespace orc_bridge;
+
+namespace evm_util
 {
 
   /**
@@ -161,10 +163,11 @@ namespace orc_bridge
     }
   }
 
-  inline const eosio::checksum256 getArrayMemberSlot(uint256_t array_slot, uint256_t position, uint256_t property_count, uint256_t array_length){
-        return toChecksum256(array_slot + position + (property_count * (array_length - uint256_t(1))));
+  inline const eosio::checksum256 getArrayMemberSlot(uint256_t array_slot, uint256_t position, uint256_t property_count, uint256_t i){
+        return toChecksum256(array_slot + position + (property_count * (i)));
   }
-  unsigned char decodeHex(char c)
+
+  inline unsigned char decodeHex(char c)
   {
       if ('0' <= c && c <= '9') { return c      - '0'; }
       if ('a' <= c && c <= 'f') { return c + 10 - 'a'; }
@@ -172,7 +175,7 @@ namespace orc_bridge
       return 0;
   }
 
-  std::string decodeHex(std::string const & s)
+  inline std::string decodeHex(std::string const & s)
   {
       std::string result;
       result.reserve(s.size() / 2);

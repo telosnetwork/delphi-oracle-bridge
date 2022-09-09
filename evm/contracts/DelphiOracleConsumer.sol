@@ -24,20 +24,19 @@ contract DelphiOracleConsumer {
         string pair;
      }
      Request[] public requests;
+     uint count;
 
     constructor(address _bridge) {
         bridge = IDelphiOracleBridge(_bridge);
+        count = 0;
     }
 
     function makeRequest(string calldata pair, uint limit, uint callback_gas) external  payable {
         require(msg.value > 0, "Request needs fee and callback gas passed");
         require(limit <= 100, "Maximum limit is 100");
-        uint callId = 0;
-        if(requests.length > 0){
-            callId = requests[requests.length - 1].id + 1;
-        }
-        requests.push(Request(callId, pair));
-        bridge.request{value: msg.value }(callId, pair, limit, callback_gas, address(this));
+        requests.push(Request(count, pair));
+        bridge.request{value: msg.value }(count, pair, limit, callback_gas, address(this));
+        count++;
     }
 
     function receiveDatapoints(uint callId, Datapoint[] calldata datapoints) external {

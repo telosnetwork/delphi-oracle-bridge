@@ -9,7 +9,7 @@
 // Bridge
 #define FUNCTION_SIGNATURE "abbbc0e0" // our EVM function signature
 #define STORAGE_INDEX 2 // our EVM storage index
-#define GAS_LIMIT 0x000000000000000000000000000000000000000000000000000000001e8480 // Our EVM gas limit for the function call
+#define GAS_LIMIT 0x000000000000000000000000000000000000000000000000000000001e8480 // Our base EVM gas limit for the function call
 
 namespace orc_bridge
 {

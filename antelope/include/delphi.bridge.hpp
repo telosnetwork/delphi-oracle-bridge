@@ -27,6 +27,7 @@
 using namespace std;
 using namespace eosio;
 using namespace orc_bridge;
+using namespace evm_util;
 
 namespace orc_bridge
 {

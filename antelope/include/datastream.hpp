@@ -10,6 +10,8 @@ namespace bigint {
   using checksum256 = intx::uint256;
 }
 
+using namespace evm_util;
+
 namespace orc_bridge {
   /**
    *  Serialize a fixed size int
