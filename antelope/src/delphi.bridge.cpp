@@ -75,8 +75,7 @@ namespace orc_bridge
 
 
     //======================== RNG Oracle actions ========================
-
-    // request notification, checks for values in eosio.evm accountstate and adds a request
+    // request notification, checks for values in eosio.evm accountstate and answers request
     ACTION delphibridge::reqnotify()
     {
         // open config singletons
@@ -102,42 +101,53 @@ namespace orc_bridge
         const auto evm_contract = conf.evm_contract.extract_as_byte_array();
         std::vector<uint8_t> to;
         to.insert(to.end(),  evm_contract.begin(), evm_contract.end());
-        const auto fnsig = toBin(FUNCTION_SIGNATURE);
+        const auto fnsig = toBin(FUNCTION_ANSWER_SIGNATURE);
 
         // Loop to make sure we do not miss requests
         for(uint256_t i = 0; i < array_length_checksum->value;i=i+1){
             // get call ID (uint) from EVM storage
-            const auto call_id_checksum = account_states_bykey.find(getArrayMemberSlot(array_slot, 0, 7, i));
-            const uint256_t call_id = (call_id_checksum == account_states_bykey.end()) ? uint256_t(0) : call_id_checksum->value;
-            const std::vector<uint8_t> call_id_bs = pad(intx::to_byte_string(call_id), 16, true);
+            const auto call_id_checksum = account_states_bykey.find(getArrayMemberSlot(array_slot, 0, 8, i));
+            const auto call_id = (call_id_checksum == account_states_bykey.end()) ? intx::to_byte_string(uint256_t(0)) : intx::to_byte_string(call_id_checksum->value);
+            const std::vector<uint8_t> call_id_bs = pad(call_id, 16, true);
 
             // Get pair (string) from EVM storage (strings < 32b, as will be our case here for pairs, are stored as data + length)
             // To get string, we need to remove trailing 0 from the data part (using length)
-            const auto pair_checksum = account_states_bykey.find(getArrayMemberSlot(array_slot, 5, 7, i));
+            const auto pair_checksum = account_states_bykey.find(getArrayMemberSlot(array_slot, 5, 8, i));
             if(pair_checksum == account_states_bykey.end()){
                 continue;
             }
+
             const size_t pair_length = shrink<size_t>(pair_checksum->value.lo) / 2; // get length as size_t
             const std::vector<uint8_t> pair_length_bs = pad(intx::to_byte_string(uint256_t(pair_length)), 32, true);
             std::vector<uint8_t> pair = intx::to_byte_string(pair_checksum->value.hi);
             pair.resize(pair_length); // remove trailing 0
 
             // Get limit (uint) from EVM storage
-            const auto limit_checksum = account_states_bykey.find(getArrayMemberSlot(array_slot, 4, 7, i));
+            const auto limit_checksum = account_states_bykey.find(getArrayMemberSlot(array_slot, 4, 8, i));
             const auto limit = (limit_checksum == account_states_bykey.end()) ? 0 : limit_checksum->value;
 
             // Get callback gas from EVM storage
-            const auto gas_checksum = account_states_bykey.find(getArrayMemberSlot(array_slot, 6, 7, i));
-            uint256_t gas = (gas_checksum == account_states_bykey.end()) ? uint256_t(0) : gas_checksum->value;
+            const auto gas_checksum = account_states_bykey.find(getArrayMemberSlot(array_slot, 6, 8, i));
+            uint256_t callbackGas = (gas_checksum == account_states_bykey.end()) ? uint256_t(0) : gas_checksum->value;
+
+            // read table of delphi oracle to get datapoints
+            datapointstable _datapoints(ORACLE, name(decodeHex(bin2hex(pair))).value);
 
             // Prepare solidity function data (function signature + arguments)
             std::vector<uint8_t> data;
             data.insert(data.end(), fnsig.begin(), fnsig.end());
             data.insert(data.end(), call_id_bs.begin(), call_id_bs.end()); // Our first argument, call_id of the Request we are parsing
-            // read table of delphi oracle to get datapoints
-            datapointstable _datapoints(ORACLE, name(decodeHex(bin2hex(pair))).value);
+
+             // If no datapoints found for this pair send back empty tuple
             if(_datapoints.begin() == _datapoints.end()){
-                continue; // No datapoints found for this pair... send delete request answer ? empty answer ? (Need to delete req from bridge somehow...)
+                prefixTupleArray(&data, 0); // insert empty tuple
+                action(
+                    permission_level {get_self(), "active"_n},
+                    EVM_SYSTEM_CONTRACT,
+                    "raw"_n,
+                    std::make_tuple(get_self(), rlp::encode(account->nonce + i, evm_conf.gas_price, GAS_LIMIT + callbackGas, to, uint256_t(0), data, CURRENT_CHAIN_ID, 0, 0),  false, std::optional<eosio::checksum160>(account->address))
+                ).send();
+                continue;
             }
 
             delimitTupleArray<decltype(_datapoints)>(_datapoints, limit, &data);
@@ -170,17 +180,17 @@ namespace orc_bridge
             }
 
             // Print it
-            auto rlp_encoded = rlp::encode(account->nonce + i, evm_conf.gas_price, gas + 200000, to, uint256_t(0), data, CURRENT_CHAIN_ID, 0, 0);
-            std::vector<uint8_t> raw;
-            raw.insert(raw.end(), std::begin(rlp_encoded), std::end(rlp_encoded));
-            print(bin2hex(raw));
+            //auto rlp_encoded = rlp::encode(account->nonce + i, evm_conf.gas_price, GAS_LIMIT + callbackGas, to, uint256_t(0), data, CURRENT_CHAIN_ID, 0, 0);
+            //std::vector<uint8_t> raw;
+            //raw.insert(raw.end(), std::begin(rlp_encoded), std::end(rlp_encoded));
+            //print(bin2hex(raw));
 
             // send back to EVM using eosio.evm
             action(
                 permission_level {get_self(), "active"_n},
                 EVM_SYSTEM_CONTRACT,
                 "raw"_n,
-                std::make_tuple(get_self(), rlp::encode(account->nonce + i, evm_conf.gas_price, GAS_LIMIT, to, uint256_t(0), data, CURRENT_CHAIN_ID, 0, 0),  false, std::optional<eosio::checksum160>(account->address))
+                std::make_tuple(get_self(), rlp::encode(account->nonce + i, evm_conf.gas_price, GAS_LIMIT + callbackGas, to, uint256_t(0), data, CURRENT_CHAIN_ID, 0, 0),  false, std::optional<eosio::checksum160>(account->address))
             ).send();
 
         }

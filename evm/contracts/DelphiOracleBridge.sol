@@ -15,11 +15,13 @@ interface IDelphiOracleConsumer {
         uint value;
     }
     function receiveDatapoints(uint, Datapoint[] calldata) external;
+    function onDelphiRequestFail(uint) payable external;
 }
 
 contract DelphiOracleBridge is Ownable {
     event  Requested(address indexed requestor, uint callId, string pair);
     event  Replied(address indexed requestor, uint callId, string pair);
+    event  GasRefunded(address indexed to, uint callId, uint value);
 
      struct Request {
         uint id;
@@ -103,7 +105,8 @@ contract DelphiOracleBridge is Ownable {
         return true;
      }
 
-     function deleteRequest(uint id) external returns (bool) {
+     // Delete request from storage by ID
+     function deleteRequest(uint id) payable external returns (bool) {
         for(uint i = 0; i < requests.length; i++){
             if(requests[i].id == id){
                 require(msg.sender == requests[i].caller_address || msg.sender == owner(), "Only the requestor or owner can delete a request");
@@ -125,14 +128,14 @@ contract DelphiOracleBridge is Ownable {
                 uint caller_id = requests[i].caller_id;
                 address caller = requests[i].caller_address;
                 address callback_address = requests[i].callback_address;
-                // Delete no matter what what happens to callback
+                // Delete no matter what happens inside the callback
                 string memory pair = requests[i].pair;
                 uint gas = requests[i].callback_gas;
                 requests[i] = requests[requests.length - 1];
                 requests.pop();
                 request_count[caller]--;
                 if(gas > 0){
-                    IDelphiOracleConsumer(callback_address).receiveDatapoints{gas: gas}(callId, datapoints);
+                    IDelphiOracleConsumer(callback_address).receiveDatapoints{gas: gas}(caller_id, datapoints);
                 }
                 emit Replied(caller, caller_id, pair);
                 return;

@@ -45,6 +45,9 @@ contract DelphiOracleConsumer {
             if(requests[i].id == callId){
                 requests[i] = requests[requests.length - 1];
                 requests.pop();
+                if(datapoints.length == 0){
+                    return;
+                }
                 answers[callId] = datapoints[0].pair;
                 for(uint k = 0; k < datapoints.length; k++){
                     emit Received(callId, datapoints[k].pair, datapoints[k].owner, datapoints[k].value, datapoints[k].median, datapoints[k].timestamp); // POC, implement your own logic here instead

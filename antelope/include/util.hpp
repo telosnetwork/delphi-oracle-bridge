@@ -131,8 +131,11 @@ namespace evm_util
   }
 
   template<typename T>
-  inline std::vector<T> pad(std::vector<T> vector, uint64_t padding, bool prepend){
-     vector.insert(prepend ? vector.begin() : vector.end(),(padding - vector.size()), 0);
+  static inline std::vector<T> pad(std::vector<T> vector, uint64_t padding, bool prepend){
+    if(vector.size() >= padding){
+        return vector;
+    }
+    vector.insert(prepend ? vector.begin() : vector.end(), (padding - vector.size()), 0);
     return vector;
   }
 
@@ -143,21 +146,24 @@ namespace evm_util
         data->insert(data->end(), array_delimiter.begin(), array_delimiter.end());
   }
 
+  static inline void prefixTupleArray(std::vector<uint8_t> *data, uint64_t total){
+        std::vector<uint8_t> array_delimiter = pad(intx::to_byte_string(uint256_t(64)), 32, true); // delimiter
+        data->insert(data->end(), array_delimiter.begin(), array_delimiter.end());
+        array_delimiter = pad(intx::to_byte_string(uint256_t(total)), 32, true); // total array length
+        data->insert(data->end(), array_delimiter.begin(), array_delimiter.end());
+  }
+
   template <typename table>
   static inline void delimitTupleArray(table& iterator, const uint256_t limit, std::vector<uint8_t> *data){
     uint64_t total = 0;
     for ( auto itr = iterator.begin(); itr != iterator.end() && total < limit; itr++ ) {
        total++;
     }
-    std::vector<uint8_t> array_delimiter = pad(intx::to_byte_string(uint256_t(64)), 32, true); // delimiter
-    data->insert(data->end(), array_delimiter.begin(), array_delimiter.end());
-    array_delimiter = pad(intx::to_byte_string(uint256_t(total)), 32, true); // total array length
-    data->insert(data->end(), array_delimiter.begin(), array_delimiter.end());
-
+    prefixTupleArray(data, total);
     uint64_t count = 0;
     // Iterate for member position
     for ( auto itr = iterator.begin(); itr != iterator.end() && count < limit; itr++ ) {
-       array_delimiter = pad(intx::to_byte_string(uint256_t(32 * total + (32 * 9 * count))), 32, true);  // position of each member
+       std::vector<uint8_t> array_delimiter = pad(intx::to_byte_string(uint256_t(32 * total + (32 * 9 * count))), 32, true);  // position of each member
        data->insert(data->end(), array_delimiter.begin(), array_delimiter.end());
        count++;
     }
