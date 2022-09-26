@@ -45,7 +45,7 @@ Deploy a contract that calls the `DelphiOracleBridge` contract's `request(uint c
     }
 ```
 
-You can refer to the [`DelphiOracleConsumer`](https://github.com/telosnetwork/delphi-oracle-bridge/blob/master/evm/contracts/DelphiOracleConsumer.sol) EVM contract for an example.
+You can refer to the [`DelphiOracleConsumer`](https://github.com/telosnetwork/delphi-oracle-bridge/blob/master/evm/contracts/DelphiOracleConsumer.sol) EVM contract for a basic example.
 
 ### What is callback gas ? How do I know what value to pass ?
 
