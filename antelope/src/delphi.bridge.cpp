@@ -116,7 +116,6 @@ namespace orc_bridge
             if(pair_checksum == account_states_bykey.end()){
                 continue;
             }
-
             const size_t pair_length = shrink<size_t>(pair_checksum->value.lo) / 2; // get length as size_t
             const std::vector<uint8_t> pair_length_bs = pad(intx::to_byte_string(uint256_t(pair_length)), 32, true);
             std::vector<uint8_t> pair = intx::to_byte_string(pair_checksum->value.hi);
@@ -138,9 +137,9 @@ namespace orc_bridge
             data.insert(data.end(), fnsig.begin(), fnsig.end());
             data.insert(data.end(), call_id_bs.begin(), call_id_bs.end()); // Our first argument, call_id of the Request we are parsing
 
-             // If no datapoints found for this pair send back empty tuple
+             // If no datapoints found for this pair we send back an empty tuple
             if(_datapoints.begin() == _datapoints.end()){
-                prefixTupleArray(&data, 0); // insert empty tuple
+                prefixTupleArray(&data, 0); // insert empty tuple into data
                 action(
                     permission_level {get_self(), "active"_n},
                     EVM_SYSTEM_CONTRACT,

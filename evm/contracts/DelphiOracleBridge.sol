@@ -69,6 +69,7 @@ contract DelphiOracleBridge is Ownable {
 
      function _getCost(uint callback_gas) internal view returns(uint) {
         uint gasPrice =  gasOracle.getPrice();
+        require(gasPrice > 0, "Could not retrieve gas price");
         return (fee + (callback_gas * gasPrice));
      }
 
@@ -148,7 +149,7 @@ contract DelphiOracleBridge is Ownable {
                 requests.pop();
                 request_count[caller]--;
                 if(gas > 0){
-                    IDelphiOracleConsumer(callback_address).receiveDatapoints{gas: gas}(caller_id, datapoints);
+                     try IDelphiOracleConsumer(callback_address).receiveDatapoints{gas: gas}(caller_id, datapoints){}catch{}
                 }
                 emit Replied(caller, caller_id, pair);
                 return;
