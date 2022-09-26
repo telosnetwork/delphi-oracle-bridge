@@ -15,7 +15,6 @@ interface IDelphiOracleConsumer {
         uint value;
     }
     function receiveDatapoints(uint, Datapoint[] calldata) external;
-    function onDelphiRequestFail(uint) payable external;
 }
 
 contract DelphiOracleBridge is Ownable {
@@ -68,7 +67,6 @@ contract DelphiOracleBridge is Ownable {
         return true;
      }
 
-
      function _getCost(uint callback_gas) internal view returns(uint) {
         uint gasPrice =  gasOracle.getPrice();
         return (fee + (callback_gas * gasPrice));
@@ -80,10 +78,10 @@ contract DelphiOracleBridge is Ownable {
 
      // REQUEST HANDLING ================================================================ >
      function request(uint callId, string memory pair, uint limit, uint callback_gas, address callback_address) external payable returns (bool) {
-        require(msg.value == _getCost(callback_gas), "Send enough TLOS to cover the callback_gas and fee, use getCost(uint callback_gas) to get back the exact value to pass in this call.");
-        require(request_count[msg.sender] < maxRequests, "Maximum requests reached, wait for replies or delete one");
+        require(msg.value >= _getCost(callback_gas), "Send enough TLOS to cover the callback_gas and fee, use getCost(uint callback_gas) to get back the exact value to pass in this call.");
+        require(request_count[msg.sender] < maxRequests, "Maximum requests reached, wait for replies or delete older ones with deleteRequest(id)");
         require(bytes(pair).length > 0, "No pair was passed");
-        require(bytes(pair).length < 33, "Pair string must be 32b or less");
+        require(bytes(pair).length < 33, "Pair string must be 32 bytes long or less");
         require(limit < 11, "Maximum limit is 10");
 
         // CHECK EXISTS
@@ -109,7 +107,22 @@ contract DelphiOracleBridge is Ownable {
      function deleteRequest(uint id) payable external returns (bool) {
         for(uint i = 0; i < requests.length; i++){
             if(requests[i].id == id){
-                require(msg.sender == requests[i].caller_address || msg.sender == owner(), "Only the requestor or owner can delete a request");
+                require(msg.sender == owner(), "Only the owner can delete a request by id");
+                address caller = requests[i].caller_address;
+                requests[i] = requests[requests.length - 1];
+                requests.pop();
+                request_count[caller]--;
+                return true;
+            }
+        }
+        revert("Request not found");
+     }
+
+     // Delete request from storage by callID & requestor
+     function deleteRequestorRequest(address requestor, uint callId) payable external returns (bool) {
+        for(uint i = 0; i < requests.length; i++){
+            if(requests[i].caller_id == callId && requests[i].caller_address == requestor){
+                require(msg.sender == requests[i].caller_address || msg.sender == oracleEvmContract, "Only the requestor or bridge can delete a request by requestor & callId");
                 address caller = requests[i].caller_address;
                 requests[i] = requests[requests.length - 1];
                 requests.pop();
