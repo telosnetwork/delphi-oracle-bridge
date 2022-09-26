@@ -28,6 +28,7 @@ For more, refer to the documentation inside the `antelope` folder
 ## Listeners
 
 The listener for this bridge is located inside our [Telos Oracle Scripts](https://github.com/telosnetwork/telos-oracle-scripts) repository
+
 Refer to the configuration sample's listeners > delphi > bridge section for an example.
 
 ## Make a request !
