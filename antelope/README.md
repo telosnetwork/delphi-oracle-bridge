@@ -10,7 +10,11 @@ This part of the repository requires the [`cleos`](https://developers.eos.io/man
 
 ### BUILD
 
-Run the following command:
+Make a build directory if you haven't using
+
+`mkdir build`
+
+Then run the following command:
 
 `bash build.sh`
 
