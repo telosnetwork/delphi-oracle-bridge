@@ -53,6 +53,6 @@ The `callback_gas` variable contains the gas units you estimate will be needed t
 
 You can query the TLOS value to pass in your `request()` function call by calling the `getCost(uint callback_gas)` function.
 
-You can also calculate that cost by taking the gas price from the `GasOracleBridge` with `getPrice()`, multiply that price with your estimate gas units (ie: 50000) and add the fee from the `DelphiOracleBridge` that you can query with `fee()`:
+You can also calculate that cost by taking the gas price from the `[GasOracleBridge](https://github.com/telosnetwork/gas-oracle-bridge)` with `getPrice()`, multiply that price with your estimate gas units (ie: 50000) and add the fee from the `DelphiOracleBridge` that you can query with `fee()`:
 
 `Cost = Gas Units * Gas Price + Bridge Fee`
