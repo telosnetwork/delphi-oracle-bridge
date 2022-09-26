@@ -16,7 +16,7 @@ The bridge EVM contract. Receives requests and sends responses back to a callbac
 
 ### DelphiOracleConsumer
 
-Example implementation of a consumer with a callback function
+Example implementation of a consumer with a DelphiOracleBridge `request` call and a callback function
 
 ### GasOracleBridge
 
