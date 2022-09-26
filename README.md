@@ -1,7 +1,7 @@
 # Delphi Oracle EVM Bridge
 
 This repository contains the Telos Delphi Oracle EVM <> Antelope Bridge.
-It is divided in 3 sections: EVM, Antelope and listener scripts ran by oracles.
+It is divided in 3 sections: EVM, Antelope and Listeners.
 
 ## EVM
 
