@@ -2,7 +2,7 @@
 
 This repository contains the Telos Delphi Oracle EVM <> Antelope Bridge.
 
-The bridge requires the deployment of 3 components to work: EVM & Antelope which are part of this repository and Listeners that are part of our [Telos Oracle Scripts](https://github.com/telosnetwork/telos-oracle-scripts) repository. Follow the instructions below to deploy it.
+The bridge requires the deployment of 3 components to work: the EVM & Antelope components which are part of this repository and Listener component that is part of our [Telos Oracle Scripts](https://github.com/telosnetwork/telos-oracle-scripts) repository. Follow the instructions below to deploy it.
 
 ## EVM
 
