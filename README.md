@@ -45,7 +45,7 @@ Deploy a contract that calls the `DelphiOracleBridge` contract's `request(uint c
     }
 ```
 
-You can refer to the [`DelphiOracleConsumer`](https://github.com/telosnetwork/delphi-oracle-bridge/blob/master/evm/contracts/DelphiOracleConsumer.sol) EVM contract for a basic example.
+You can refer to the [`DelphiOracleConsumer`](https://github.com/telosnetwork/delphi-oracle-bridge/blob/master/evm/contracts/DelphiOracleConsumer.sol) EVM contract for a basic example. It implements the call to `request` and the `receiveDatapoints` callback in the same contract.
 
 ### What is callback gas ? How do I know what value to pass ?
 
