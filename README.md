@@ -27,9 +27,8 @@ For more, refer to the documentation inside the `antelope` folder
 
 ## Listeners
 
-### RequestListener
-
-Listens to new requests and calls the `reqnotify()` action of `delphi.bridge.cpp`
+The listener for this bridge is located inside our [Telos Oracle Scripts](https://github.com/telosnetwork/telos-oracle-scripts) repository
+Refer to the configuration sample's listeners > delphi > bridge section for an example.
 
 ## Make a request !
 
