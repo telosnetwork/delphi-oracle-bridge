@@ -7,7 +7,11 @@ It is divided in 3 sections: EVM, Antelope and listener scripts ran by oracles.
 
 ### DelphiOracleBridge
 
-Receives requests and sends responses back to a callback function
+The bridge EVM contract. Receives requests and sends responses back to a callback function. Currently deployed at
+
+**TESTNET :** TBD
+
+**MAINNET :** TBD
 
 ### DelphiOracleConsumer
 
