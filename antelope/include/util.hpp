@@ -139,7 +139,7 @@ namespace evm_util
     return vector;
   }
 
-  static inline void delimitTupleArrayElement(std::vector<uint8_t> *data){
+  static inline void prefixTupleArrayElement(std::vector<uint8_t> *data){
         std::vector<uint8_t> array_delimiter = pad(intx::to_byte_string(uint256_t(160)), 32, true);  // delimiter
         data->insert(data->end(), array_delimiter.begin(), array_delimiter.end());
         array_delimiter = pad(intx::to_byte_string(uint256_t(224)), 32, true);  // delimiter

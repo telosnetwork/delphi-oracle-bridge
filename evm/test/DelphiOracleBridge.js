@@ -32,10 +32,10 @@ describe("DelphiOracleBridge", function () {
         return { bridge, consumer, owner, otherAccount, gasOracle, datapoints};
     }
 
-    describe("Deployment", function () {
+    describe(":: Deployment", function () {
         it("Should set the right EVM contract", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
-            await expect(await bridge.oracleEvmContract()).to.equal(owner.address);
+            await expect(await bridge.oracleEvmAddress()).to.equal(owner.address);
         });
         it("Should set the max requests", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
@@ -47,15 +47,15 @@ describe("DelphiOracleBridge", function () {
         });
     });
 
-    describe("Configuration", function () {
+    describe(":: Setters", function () {
         it("Should let owner set the EVM contract", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
-            await expect(bridge.setOracleEVMContract(otherAccount.address)).to.not.be.reverted;
-            await expect(await bridge.oracleEvmContract()).to.equal(otherAccount.address);
+            await expect(bridge.setOracleEvmAddress(otherAccount.address)).to.not.be.reverted;
+            await expect(await bridge.oracleEvmAddress()).to.equal(otherAccount.address);
         });
         it("Should not let any other account set the EVM contract", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
-            await expect(bridge.connect(otherAccount).setOracleEVMContract(otherAccount.address)).to.be.reverted;
+            await expect(bridge.connect(otherAccount).setOracleEvmAddress(otherAccount.address)).to.be.reverted;
         });
         it("Should let owner set the max requests", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
@@ -77,55 +77,69 @@ describe("DelphiOracleBridge", function () {
         });
     });
 
-    describe("Cost", function () {
-        it("Should return the cost", async function () {
+    describe(":: Request price", function () {
+        it("Should return the correct cost", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
-            await expect(await bridge.getCost(100000)).to.not.be.reverted;
+            await expect(await bridge.calculateRequestPrice(100000)).to.be.equal(FEE.add(100000 * GAS_PRICE));
         });
     });
-    describe("Request", function () {
+    describe(":: Request", function () {
         it("Should accept valid new requests", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
-            const cost = await bridge.getCost(100000);
+            const cost = await bridge.calculateRequestPrice(100000);
             await expect(consumer.connect(otherAccount).makeRequest(PAIR, 1, 100000, {value: cost})).to.not.be.reverted;
             await expect(await bridge.requestExists(otherAccount.address, 0)).to.not.be.reverted;
         });
         it("Should not accept new requests if no pairs are passed", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
-            const cost = await bridge.getCost(100000);
+            const cost = await bridge.calculateRequestPrice(100000);
             await expect(consumer.connect(otherAccount).makeRequest([], 1, 100000, {value: cost})).to.be.reverted;
         });
         it("Should not accept new requests if limit is too high", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
-            const cost = await bridge.getCost(100000);
+            const cost = await bridge.calculateRequestPrice(100000);
             await expect(consumer.connect(otherAccount).makeRequest(PAIR, 200, 100000, {value: cost})).to.be.reverted;
-        });
-        it("Should not accept new requests if wrong fee is passed", async function () {
-            const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
-            const cost = await bridge.getCost(100000);
-            await expect(consumer.connect(otherAccount).makeRequest(PAIR, 1, 100000, {value: 0})).to.be.reverted;
-            await expect(consumer.connect(otherAccount).makeRequest(PAIR, 1, 100000, {value: cost.div(2) })).to.be.reverted;
         });
         it("Should not accept new requests if max request is reached", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
-            const cost = await bridge.getCost(100000);
+            const cost = await bridge.calculateRequestPrice(100000);
             for(var i = 0; i < MAX_REQUESTS; i++){
                 expect(await consumer.connect(otherAccount).makeRequest(PAIR, 1, 100000, {value: cost})).to.not.be.reverted;
             }
             await expect(consumer.connect(otherAccount).makeRequest(PAIR, 1, 100000, {value: cost})).to.be.reverted;
         });
+        it("Should not accept new requests if wrong fee is passed", async function () {
+            const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
+            const cost = await bridge.calculateRequestPrice(100000);
+            await expect(consumer.connect(otherAccount).makeRequest(PAIR, 1, 100000, {value: 0})).to.be.reverted;
+            await expect(consumer.connect(otherAccount).makeRequest(PAIR, 1, 100000, {value: cost.div(2) })).to.be.reverted;
+        });
+        it("Should be able to delete a request by id", async function () {
+            const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
+            const cost = await bridge.calculateRequestPrice(100000);
+            await expect(consumer.connect(otherAccount).makeRequest(PAIR, 1, 100000, {value: cost})).to.not.be.reverted;
+            await expect(await bridge.deleteRequest(0)).to.not.be.reverted;
+            await expect(await bridge.requestExists(otherAccount.address, 0)).to.be.equal(false);
+        });
+        it("Should be able to delete a request by requestor and call id", async function () {
+            const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
+            const cost = await bridge.calculateRequestPrice(100000);
+            await expect(consumer.connect(otherAccount).makeRequest(PAIR, 1, 100000, {value: cost})).to.not.be.reverted;
+            await expect(await bridge.deleteRequestorRequest(consumer.address, 0)).to.not.be.reverted;
+            await expect(await bridge.requestExists(consumer.address, 0)).to.be.equal(false);
+        });
         it("Should emit a Requested event on valid request", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
-            const cost = await bridge.getCost(100000);
+            const cost = await bridge.calculateRequestPrice(100000);
             await expect(consumer.connect(otherAccount).makeRequest(PAIR, 1, 100000, {value: cost})).to.emit(bridge, "Requested").withArgs(consumer.address, 0, PAIR);
-            await expect(await bridge.requestExists(otherAccount.address, 0)).to.not.be.reverted;
+            await expect(await bridge.requestExists(consumer.address, 0)).to.be.equal(true);
         });
     });
 
-    describe("Response", function () {
+    describe(":: Response", function () {
         it("Should not accept response from an address other than the native bridge's contract evm address", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
-            const cost = await bridge.getCost(100000);
+            const cost = await bridge.calculateRequestPrice(100000);
             await expect(consumer.makeRequest(PAIR, 1, 100000, {value: cost})).to.not.be.reverted;
             await expect(bridge.connect(otherAccount).reply(0, [{'pair': 'TLOSUSD', 'owner' : 'telosunlimited', 'value': ethers.utils.parseEther('1.0'), 'median': ethers.utils.parseEther('1.0'), 'timestamp': '1234567181' }])).to.be.reverted;
         });
@@ -135,20 +149,20 @@ describe("DelphiOracleBridge", function () {
         });
         it("Should not accept response that does not have datapoints", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
-            const cost = await bridge.getCost(100000);
+            const cost = await bridge.calculateRequestPrice(100000);
             await expect(consumer.makeRequest(PAIR, 1, 100000, {value: cost})).to.not.be.reverted;
             await expect(bridge.connect(otherAccount).reply(0, [])).to.be.reverted;
         });
         it("Should accept valid response and delete request", async function () {
             const { bridge, consumer, owner, otherAccount, datapoints } = await loadFixture(deployFixture);
-            const cost = await bridge.getCost(100000);
+            const cost = await bridge.calculateRequestPrice(100000);
             await expect(consumer.connect(otherAccount).makeRequest(PAIR, 1, 100000, {value: cost })).to.not.be.reverted;
             await expect(bridge.reply(0, datapoints)).to.not.be.reverted;
             await expect(await bridge.requestExists(otherAccount.address, 0)).to.equal(false);
         });
         it("Should emit a Replied event on valid reply", async function () {
             const { bridge, consumer, owner, otherAccount, datapoints } = await loadFixture(deployFixture);
-            const cost = await bridge.getCost(75000);
+            const cost = await bridge.calculateRequestPrice(75000);
             await expect(consumer.connect(otherAccount).makeRequest(PAIR, 1, 75000, {value: cost })).to.not.be.reverted;
             await expect(bridge.reply(0, datapoints)).to.emit(bridge, "Replied").withArgs(consumer.address, 0, PAIR);
         });

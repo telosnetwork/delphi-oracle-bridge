@@ -157,7 +157,7 @@ namespace orc_bridge
             uint64_t count = 0;
             for ( auto itr = _datapoints.begin(); itr != _datapoints.end() && count < limit; itr++ ) {
 
-               delimitTupleArrayElement(&data);
+               prefixTupleArrayElement(&data);
 
                // Prepare remaining values
                auto owner = pad(intx::to_byte_string(itr->owner.value), 32, false);

@@ -46,7 +46,7 @@ contract DelphiOracleConsumer {
                 requests[i] = requests[requests.length - 1];
                 requests.pop();
                 if(datapoints.length == 0){
-                    return;
+                    return; // No datapoints (ie: oracles failed to update, pair requested doesn't exist, ...), we stop there
                 }
                 answers[callId] = datapoints[0].pair;
                 for(uint k = 0; k < datapoints.length; k++){
