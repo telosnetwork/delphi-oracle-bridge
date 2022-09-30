@@ -1,17 +1,22 @@
 # Delphi Oracle EVM Bridge
 
 This repository contains the Telos Delphi Oracle EVM <> Antelope Bridge.
-It is divided in 3 sections: EVM, Antelope and listener scripts ran by oracles.
+
+The bridge requires the deployment of 3 components to work: the EVM & Antelope components which are part of this repository and Listener component that is part of our [Telos Oracle Scripts](https://github.com/telosnetwork/telos-oracle-scripts) repository. Follow the instructions below to deploy it.
 
 ## EVM
 
 ### DelphiOracleBridge
 
-Receives requests and sends responses back to a callback function
+The bridge EVM contract. Receives requests and sends responses back to a callback function. Currently deployed at
+
+**TESTNET :** TBD
+
+**MAINNET :** TBD
 
 ### DelphiOracleConsumer
 
-Example implementation of a consumer with a callback function
+Example implementation of a consumer with a DelphiOracleBridge `request` call and a callback function
 
 ### GasOracleBridge
 

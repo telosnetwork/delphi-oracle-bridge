@@ -1,6 +1,7 @@
 # Delphi Oracle Bridge :: EVM
 
-_This part of the repository assumes that a GasOracleBridge instance is deployed on the network already. Its address is stored inside the deploy script._
+_This part of the repository assumes that a GasOracleBridge instance is deployed on the network already. Its address is stored inside the deploy script. To deploy to mainnet you will need to edit it_
+
 ### INSTALL
 
 `npm install`
