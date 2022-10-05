@@ -40,15 +40,17 @@ contract DelphiOracleBridge is Ownable {
      IGasOracleBridge public gasOracle;
 
      uint public fee;
-     uint public maxRequests;
+     uint public max_requests;
+     uint max_callback_gas;
 
-     address public oracleEvmAddress;
+     address public oracle_evm_address;
 
-      constructor(uint _fee, uint _maxRequests, address _oracleEvmAddress, IGasOracleBridge _gasOracle) {
+      constructor(uint _fee, uint _max_requests, uint _max_callback_gas, address _oracle_evm_address, IGasOracleBridge _gasOracle) {
         fee = _fee;
-        maxRequests = _maxRequests;
-        oracleEvmAddress = _oracleEvmAddress;
+        max_requests = _max_requests;
+        oracle_evm_address = _oracle_evm_address;
         gasOracle = _gasOracle;
+        max_callback_gas = _max_callback_gas;
       }
 
      // SETTERS  ================================================================ >
@@ -57,13 +59,13 @@ contract DelphiOracleBridge is Ownable {
         return true;
      }
 
-     function setMaxRequests(uint _maxRequests) external onlyOwner returns(bool) {
-        maxRequests = _maxRequests;
+     function setMaxRequests(uint _max_requests) external onlyOwner returns(bool) {
+        max_requests = _max_requests;
         return true;
      }
 
-     function setOracleEvmAddress(address _oracleEvmAddress) external onlyOwner returns(bool) {
-        oracleEvmAddress = _oracleEvmAddress;
+     function setOracleEvmAddress(address _oracle_evm_address) external onlyOwner returns(bool) {
+        oracle_evm_address = _oracle_evm_address;
         return true;
      }
 
@@ -79,17 +81,18 @@ contract DelphiOracleBridge is Ownable {
 
      // REQUEST HANDLING ================================================================ >
      function request(uint callId, string memory pair, uint limit, uint callback_gas, address callback_address) external payable returns (bool) {
-        require(msg.value >= _calculateRequestPrice(callback_gas), "Send enough TLOS to cover the callback_gas and fee, use calculateRequestPrice(uint callback_gas) to get back the exact value to pass in this call.");
-        require(request_count[msg.sender] < maxRequests, "Maximum requests reached, wait for replies or delete older ones with deleteRequest(id)");
+        require(request_count[msg.sender] < max_requests, "Maximum requests reached, wait for replies or delete older ones with deleteRequest(id)");
         require(bytes(pair).length > 0, "No pair was passed");
         require(bytes(pair).length < 33, "Pair string must be 32 bytes long or less");
         require(limit < 11, "Maximum limit is 10");
+        require(max_callback_gas >= callback_gas, "Callback gas is above maximum");
+        require(msg.value >= _calculateRequestPrice(callback_gas), "Send enough TLOS to cover the callback_gas and fee, use calculateRequestPrice(uint callback_gas) to get back the exact value to pass in this call.");
 
         // CHECK EXISTS
         require(!this.requestExists(msg.sender, callId), "Call ID already exists");
 
         // SEND FEE & CALLBACK GAS TO ORACLE EVM ADDRESS SO IT CAN SEND THE RESPONSE BACK
-        payable(oracleEvmAddress).transfer(msg.value);
+        payable(oracle_evm_address).transfer(msg.value);
 
         request_count[msg.sender]++;
 
@@ -123,7 +126,7 @@ contract DelphiOracleBridge is Ownable {
      function deleteRequestorRequest(address requestor, uint callId) payable external returns (bool) {
         for(uint i = 0; i < requests.length; i++){
             if(requests[i].caller_id == callId && requests[i].caller_address == requestor){
-                require(msg.sender == requests[i].caller_address || msg.sender == oracleEvmAddress, "Only the requestor or bridge can delete a request by requestor & callId");
+                require(msg.sender == requests[i].caller_address || msg.sender == oracle_evm_address, "Only the requestor or bridge can delete a request by requestor & callId");
                 address caller = requests[i].caller_address;
                 requests[i] = requests[requests.length - 1];
                 requests.pop();
@@ -136,7 +139,7 @@ contract DelphiOracleBridge is Ownable {
 
      // REPLY HANDLING ================================================================ >
      function reply(uint callId, IDelphiOracleConsumer.Datapoint[] calldata datapoints) external {
-        require(msg.sender == oracleEvmAddress, "Only the native oracle bridge EVM address can call this function");
+        require(msg.sender == oracle_evm_address, "Only the native oracle bridge EVM address can call this function");
         for(uint i = 0; i < requests.length; i++){
             if(requests[i].id == callId){
                 uint caller_id = requests[i].caller_id;
