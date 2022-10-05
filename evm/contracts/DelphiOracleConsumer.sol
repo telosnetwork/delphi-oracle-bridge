@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 interface IDelphiOracleBridge {
     function request(uint callId, string calldata pair, uint limit, uint callback_gas, address callback_address) external payable;
+    function calculateRequestPrice(uint callback_gas) external view returns(uint);
 }
 
 contract DelphiOracleConsumer {
@@ -34,8 +35,13 @@ contract DelphiOracleConsumer {
     function makeRequest(string calldata pair, uint limit, uint callback_gas) external  payable {
         require(msg.value > 0, "Request needs fee and callback gas passed");
         require(limit <= 100, "Maximum limit is 100");
+
+        uint price = bridge.calculateRequestPrice(callback_gas);
+        require(price > 0, "Could not calculate price");
+        require(address(this).balance >= price, "Contract balance is too low");
+
         requests.push(Request(count, pair));
-        bridge.request{value: msg.value }(count, pair, limit, callback_gas, address(this));
+        bridge.request{value: price }(count, pair, limit, callback_gas, address(this));
         count++;
     }
 
@@ -55,6 +61,5 @@ contract DelphiOracleConsumer {
                 return;
             }
          }
-        revert("Request not found");
     }
 }
