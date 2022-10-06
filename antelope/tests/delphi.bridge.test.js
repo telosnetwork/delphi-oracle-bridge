@@ -4,7 +4,7 @@ const config = loadConfig("hydra.yml");
 
 describe("delphi.bridge", () => {
     let blockchain = new Blockchain(config);
-    let bridge = blockchain.createAccount(`delphi.brdg`);
+    let bridge = blockchain.createAccount(`delphibridge`);
     let oracle = blockchain.createAccount(`delphioracle`);
     beforeAll(async () => {
         await oracle.setContract(blockchain.contractTemplates[oracle.accountName]);
@@ -19,7 +19,7 @@ describe("delphi.bridge", () => {
                 }
             ]
         });
-        await oracle.contract.init({ app_name: `Oracle RNG`, app_version: `3`, initial_admin: oracle.accountName });
+        await oracle.contract.init({ app_name: `Delphi Oracle`, app_version: `3`, initial_admin: oracle.accountName });
         await bridge.setContract(blockchain.contractTemplates[bridge.accountName]);
         await bridge.updateAuth(`child`, `active`, {
             accounts: [
@@ -37,15 +37,7 @@ describe("delphi.bridge", () => {
         await bridge.resetTables();
         await bridge.contract.init({evm_contract: `9a469d1e668425907548228EA525A661FF3BFa2B`, version: `1`, admin: bridge.accountName, oracle: oracle.accountName, function_signature: `0dF31700`});
     });
-    describe(":: Settings", () => {
-        it("can set a new function signature", async () => {
-            const txTrace = await bridge.contract.setfnsig({new_function_signature: `0dF81700`});
-        });
-
-        it("can set a new oracle", async () => {
-            const txTrace = await bridge.contract.setoracle({new_oracle: `rng.oracle`});
-        });
-
+    describe(":: Setters", () => {
         it("can set a new admin", async () => {
             const txTrace = await bridge.contract.setadmin({new_admin: `rngorc.brdg`});
         });
@@ -63,7 +55,6 @@ describe("delphi.bridge", () => {
             const txTrace = await bridge.contract.requestrand({call_id: "01", seed: "01", caller: "9a469d1e668425907548228EA525A661FF3BFa2B", max: "64", min: "02"});
             // get all print output of the transfer action and its created notifications
             const consoleOutput = txTrace.action_traces;
-
             // print it to test runner's stdout
             console.log(consoleOutput);
         });
