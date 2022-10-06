@@ -8,7 +8,7 @@ The bridge requires the deployment of 3 components to work: the EVM & Antelope c
 
 ### DelphiOracleBridge
 
-The bridge EVM contract. Receives requests and sends responses back to a callback function. Currently deployed at
+The bridge's EVM contract. Receives requests and sends responses back to a callback function. Currently deployed at
 
 **TESTNET :** TBD
 
@@ -28,7 +28,7 @@ For more, refer to the documentation inside the `evm` folder
 
 ### delphi.bridge.cpp
 
-The bridge Antelope contract, gets notified of new request on the EVM contract by listeners, checks that request and imports it, queries the relevant data and sends it back to the EVM contract using `eosio.evm`
+The bridge's Antelope contract, it gets notified of new request on the EVM contract by listeners, then it checks out the request and imports it, finally it queries the relevant data and sends it back to the EVM contract using `eosio.evm`
 
 For more, refer to the documentation inside the `antelope` folder
 
