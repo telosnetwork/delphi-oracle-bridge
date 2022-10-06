@@ -2,7 +2,9 @@
 
 ### REQUIREMENTS
 
-This part of the repository requires the [`cleos`](https://developers.eos.io/manuals/eos/v2.2/cleos/index) command line tool as well as NodeJS 14+ with NPM
+This part of the repository requires the [`cleos`](https://developers.eos.io/manuals/eos/v2.2/cleos/index) command line tool as well as NodeJS 14+ with NPM.
+
+It also requires the EVM `DelphiOracleBridge.sol` contract to be deployed in order to configure it.
 
 ### INSTALL
 
