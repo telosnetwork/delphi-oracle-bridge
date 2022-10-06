@@ -7,6 +7,7 @@ const { expect } = require("chai");
 
 const FEE = ethers.utils.parseEther('0.2');
 const MAX_REQUESTS = 10;
+const MAX_CALLBACK_GAS = 900000000;
 const GAS_PRICE = 23610503242;
 const PAIR = "tlosusd";
 
@@ -22,7 +23,7 @@ describe("DelphiOracleBridge", function () {
         const OracleConsumer = await ethers.getContractFactory("DelphiOracleConsumer");
         let GasOracle = await ethers.getContractFactory("GasOracleBridge");
         gasOracle = await GasOracle.deploy(owner.address, GAS_PRICE)
-        const bridge = await OracleBridge.deploy(FEE, MAX_REQUESTS, owner.address, gasOracle.address);
+        const bridge = await OracleBridge.deploy(FEE, MAX_REQUESTS, MAX_CALLBACK_GAS, owner.address, gasOracle.address);
         const consumer = await OracleConsumer.deploy(bridge.address);
 
         const datapoints = [
@@ -35,11 +36,11 @@ describe("DelphiOracleBridge", function () {
     describe(":: Deployment", function () {
         it("Should set the right EVM contract", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
-            await expect(await bridge.oracleEvmAddress()).to.equal(owner.address);
+            await expect(await bridge.oracle_evm_address()).to.equal(owner.address);
         });
         it("Should set the max requests", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
-            await expect(await bridge.maxRequests()).to.equal(MAX_REQUESTS);
+            await expect(await bridge.max_requests()).to.equal(MAX_REQUESTS);
         });
         it("Should set the fee", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
@@ -51,7 +52,7 @@ describe("DelphiOracleBridge", function () {
         it("Should let owner set the EVM contract", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
             await expect(bridge.setOracleEvmAddress(otherAccount.address)).to.not.be.reverted;
-            await expect(await bridge.oracleEvmAddress()).to.equal(otherAccount.address);
+            await expect(await bridge.oracle_evm_address()).to.equal(otherAccount.address);
         });
         it("Should not let any other account set the EVM contract", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
@@ -60,7 +61,7 @@ describe("DelphiOracleBridge", function () {
         it("Should let owner set the max requests", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);
             await expect(bridge.setMaxRequests(MAX_REQUESTS + 1)).to.not.be.reverted;
-            await expect(await bridge.maxRequests()).to.equal(MAX_REQUESTS + 1);
+            await expect(await bridge.max_requests()).to.equal(MAX_REQUESTS + 1);
         });
         it("Should not let any other account set the max requests", async function () {
             const { bridge, consumer, owner, otherAccount } = await loadFixture(deployFixture);

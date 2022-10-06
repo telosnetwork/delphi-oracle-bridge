@@ -32,7 +32,7 @@ contract DelphiOracleConsumer {
         count = 0;
     }
 
-    function makeRequest(string calldata pair, uint limit, uint callback_gas) external  payable {
+    function makeRequest(string calldata pair, uint limit, uint callback_gas) external {
         require(msg.value > 0, "Request needs fee and callback gas passed");
         require(limit <= 100, "Maximum limit is 100");
 
