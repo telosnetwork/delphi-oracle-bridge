@@ -30,6 +30,10 @@ _To learn how to deploy it, refer to the documentation inside the `evm` folder_
 
 The bridge's Antelope contract, it gets notified of new request on the EVM contract by listeners, then it checks out the request and imports it, finally it queries the relevant data and sends it back to the EVM contract using `eosio.evm`
 
+**TESTNET :** delphibridge
+
+**MAINNET :** delphibridge
+
 _To learn how to deploy it, refer to the documentation inside the `antelope` folder_
 
 ## Listeners
