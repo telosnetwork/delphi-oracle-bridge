@@ -28,6 +28,8 @@ For more, refer to the documentation inside the `evm` folder
 
 ### delphi.bridge.cpp
 
+The bridge Antelope contract, gets notified of new request on the EVM contract by listeners, checks that request and imports it, queries the relevant data and sends it back to the EVM contract using `eosio.evm`
+
 For more, refer to the documentation inside the `antelope` folder
 
 ## Listeners
