@@ -22,7 +22,7 @@ Example implementation of a consumer with a DelphiOracleBridge `request` call an
 
 Query current gas price from a smart contract. This contract is only included for test purposes and will not be deployed.
 
-For more, refer to the documentation inside the `evm` folder
+_For more, refer to the documentation inside the `evm` folder_
 
 ## Antelope
 
@@ -30,7 +30,7 @@ For more, refer to the documentation inside the `evm` folder
 
 The bridge's Antelope contract, it gets notified of new request on the EVM contract by listeners, then it checks out the request and imports it, finally it queries the relevant data and sends it back to the EVM contract using `eosio.evm`
 
-For more, refer to the documentation inside the `antelope` folder
+_For more, refer to the documentation inside the `antelope` folder_
 
 ## Listeners
 
