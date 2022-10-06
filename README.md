@@ -24,7 +24,7 @@ Query current gas price from a smart contract. This contract is only included fo
 
 _To learn how to deploy it, refer to the documentation inside the `evm` folder_
 
-## Antelope
+## ANTELOPE
 
 ### delphi.bridge.cpp
 
@@ -36,12 +36,12 @@ The bridge's Antelope contract, it gets notified of new request on the EVM contr
 
 _To learn how to deploy it, refer to the documentation inside the `antelope` folder_
 
-## Listeners
+## LISTENERS
 
 The listener for this bridge is located inside our [Telos Oracle Scripts](https://github.com/telosnetwork/telos-oracle-scripts) repository
 
 Refer to the configuration sample's **listeners > delphi > bridge** section for an example.
 
-## Use it !
+## USING THE BRIDGE
 
 Follow the documentation available in Telos docs [here]() to learn how to query pair prices using our Delphi Oracle Bridge.
