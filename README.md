@@ -22,7 +22,7 @@ Example implementation of a consumer with a DelphiOracleBridge `request` call an
 
 Query current gas price from a smart contract. This contract is only included for test purposes and will not be deployed.
 
-_To learn how to deploy it, refer to the documentation inside the `evm` folder_
+_To learn how to deploy it, refer to the documentation inside the [`evm`](https://github.com/telosnetwork/delphi-oracle-bridge/tree/master/evm) folder_
 
 ## ANTELOPE
 
@@ -34,7 +34,7 @@ The bridge's Antelope contract, it gets notified of new request on the EVM contr
 
 **MAINNET :** TBD
 
-_To learn how to deploy it, refer to the documentation inside the `antelope` folder_
+_To learn how to deploy it, refer to the documentation inside the [`antelope`](https://github.com/telosnetwork/delphi-oracle-bridge/tree/master/antelope) folder_
 
 ## LISTENERS
 
