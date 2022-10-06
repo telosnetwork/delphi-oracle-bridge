@@ -22,7 +22,7 @@ Files will be saved to the `build` directory
 
 You can deploy the contract using cleos with the following command:
 
-`cleos --url http://testnet.telos.net set contract YOUR_CONTRACT_ACCOUNT ./build ./delphi.bridge.cpp ./delphi.bridge.hpp`
+`bash deploy.sh`
 
 ### CONFIGURE
 
