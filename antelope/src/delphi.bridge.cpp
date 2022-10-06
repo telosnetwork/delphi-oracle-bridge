@@ -74,7 +74,7 @@ namespace orc_bridge
     };
 
 
-    //======================== RNG Oracle actions ========================
+    //======================== Delphi Oracle actions ========================
     // request notification, checks for values in eosio.evm accountstate and answers request
     ACTION delphibridge::reqnotify()
     {
@@ -82,6 +82,7 @@ namespace orc_bridge
         const auto conf = config_bridge.get();
         config_singleton_evm config_evm(EVM_SYSTEM_CONTRACT, EVM_SYSTEM_CONTRACT.value);
         const auto evm_conf = config_evm.get();
+        requests_table requests(get_self(), get_self().value);
 
         // Define EVM tables
         account_state_table account_states(EVM_SYSTEM_CONTRACT, conf.evm_contract_scope);
@@ -107,8 +108,23 @@ namespace orc_bridge
         for(uint256_t i = 0; i < array_length_checksum->value;i=i+1){
             // get call ID (uint) from EVM storage
             const auto call_id_checksum = account_states_bykey.find(getArrayMemberSlot(array_slot, 0, 8, i));
-            const auto call_id = (call_id_checksum == account_states_bykey.end()) ? intx::to_byte_string(uint256_t(0)) : intx::to_byte_string(call_id_checksum->value);
-            const std::vector<uint8_t> call_id_bs = pad(call_id, 16, true);
+            const auto call_id = (call_id_checksum == account_states_bykey.end()) ? uint256_t(0) : call_id_checksum->value;
+            const std::vector<uint8_t> call_id_bs = pad(intx::to_byte_string(call_id), 16, true);
+
+            // Check request not already processing
+            auto requests_by_call_id = requests.get_index<"bycallid"_n>();
+            auto exists = requests_by_call_id.find(toChecksum256(call_id));
+            if(exists != requests_by_call_id.end()){
+                continue;
+            }
+
+            // Add request
+            uint64_t request_id = requests.available_primary_key();
+            requests.emplace(get_self(), [&](auto& r) {
+                r.request_id = request_id;
+                r.call_id = toChecksum256(call_id);
+            });
+            auto &request = requests_by_call_id.get(toChecksum256(call_id), "Request could not be found");
 
             // Get pair (string) from EVM storage (strings < 32b, as will be our case here for pairs, are stored as data + length)
             // To get string, we need to remove trailing 0 from the data part (using length)
@@ -146,6 +162,9 @@ namespace orc_bridge
                     "raw"_n,
                     std::make_tuple(get_self(), rlp::encode(account->nonce + i, evm_conf.gas_price, GAS_LIMIT + callbackGas, to, uint256_t(0), data, CURRENT_CHAIN_ID, 0, 0),  false, std::optional<eosio::checksum160>(account->address))
                 ).send();
+
+                // Delete request
+                requests.erase(request);
                 continue;
             }
 
@@ -178,12 +197,6 @@ namespace orc_bridge
                count++;
             }
 
-            // Print it
-            //auto rlp_encoded = rlp::encode(account->nonce + i, evm_conf.gas_price, GAS_LIMIT + callbackGas, to, uint256_t(0), data, CURRENT_CHAIN_ID, 0, 0);
-            //std::vector<uint8_t> raw;
-            //raw.insert(raw.end(), std::begin(rlp_encoded), std::end(rlp_encoded));
-            //print(bin2hex(raw));
-
             // send back to EVM using eosio.evm
             action(
                 permission_level {get_self(), "active"_n},
@@ -192,6 +205,8 @@ namespace orc_bridge
                 std::make_tuple(get_self(), rlp::encode(account->nonce + i, evm_conf.gas_price, GAS_LIMIT + callbackGas, to, uint256_t(0), data, CURRENT_CHAIN_ID, 0, 0),  false, std::optional<eosio::checksum160>(account->address))
             ).send();
 
+            // Delete request
+            requests.erase(request);
         }
     };
 }

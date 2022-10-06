@@ -83,6 +83,20 @@ namespace orc_bridge {
       typedef eosio::singleton<"config"_n, config> config_singleton_evm;
 
     //======================== Tables ========================
+    // Request
+    struct [[eosio::table, eosio::contract("delphibridge")]] Request {
+        uint64_t request_id;
+        eosio::checksum256 call_id;
+
+        uint64_t primary_key() const { return request_id; };
+        eosio::checksum256 by_call_id() const { return call_id; };
+
+        EOSLIB_SERIALIZE(Request, (request_id)(call_id));
+    };
+    typedef multi_index<name("requests"), Request,
+       eosio::indexed_by<eosio::name("bycallid"), eosio::const_mem_fun<Request, eosio::checksum256, &Request::by_call_id >>
+    >  requests_table;
+
     // Config
     TABLE bridgeconfig {
         eosio::checksum160 evm_contract;
