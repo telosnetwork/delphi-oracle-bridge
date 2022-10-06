@@ -32,7 +32,7 @@ The bridge's Antelope contract, it gets notified of new request on the EVM contr
 
 **TESTNET :** delphibridge
 
-**MAINNET :** delphibridge
+**MAINNET :** TBD
 
 _To learn how to deploy it, refer to the documentation inside the `antelope` folder_
 
