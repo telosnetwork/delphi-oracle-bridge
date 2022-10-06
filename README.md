@@ -6,7 +6,7 @@ The bridge requires the deployment of 3 components to work: the EVM & Antelope c
 
 ## EVM
 
-### DelphiOracleBridge
+### DelphiOracleBridge.sol
 
 The bridge's EVM contract. Receives requests and sends responses back to a callback function. Currently deployed at
 
@@ -14,11 +14,11 @@ The bridge's EVM contract. Receives requests and sends responses back to a callb
 
 **MAINNET :** TBD
 
-### DelphiOracleConsumer
+### DelphiOracleConsumer.sol
 
 Example implementation of a consumer with a DelphiOracleBridge `request` call and a callback function
 
-### GasOracleBridge
+### GasOracleBridge.sol
 
 Query current gas price from a smart contract. This contract is only included for test purposes and will not be deployed.
 
