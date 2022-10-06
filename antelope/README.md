@@ -32,4 +32,4 @@ After deploying the EVM contract, configure its address like so:
 
 `cleos --url http://testnet.telos.net push action YOUR_CONTRACT_ACCOUNT setevmctc '{"new_contract": "f7d3A11...."}' -p YOUR_CONTRACT_ACCOUNT`
 
-Note that the address is the DelphiOracleBridge.sol EVM address without the 0x prefix.
+_Note that the address is the `DelphiOracleBridge.sol` EVM address without the 0x prefix._
