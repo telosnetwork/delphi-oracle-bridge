@@ -12,11 +12,7 @@ It also requires the EVM `DelphiOracleBridge.sol` contract to be deployed in ord
 
 ### BUILD
 
-Make a build directory if you haven't using
-
-`mkdir build`
-
-Then run the following command:
+Run the following command:
 
 `bash build.sh`
 
